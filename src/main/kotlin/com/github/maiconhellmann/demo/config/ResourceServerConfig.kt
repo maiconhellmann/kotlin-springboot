@@ -29,6 +29,7 @@ class ResourceServerConfig : ResourceServerConfigurerAdapter() {
                 .requestMatchers()
                 .and()
                 .authorizeRequests()
-                .antMatchers("/article").authenticated()
+                .anyRequest()
+                .authenticated()
     }
 }

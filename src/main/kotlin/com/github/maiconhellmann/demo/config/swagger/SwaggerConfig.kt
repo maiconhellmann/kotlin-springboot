@@ -23,7 +23,8 @@ class SwaggerConfig {
 //                .paths(PathSelectors.ant("/article"))
                 .paths(Predicates.or(
                         PathSelectors.ant("/oauth/token/**"),
-                        PathSelectors.ant("/article/**")
+                        PathSelectors.ant("/article/**"),
+                        PathSelectors.ant("/user/**")
                 ))
                 .build()
     }
