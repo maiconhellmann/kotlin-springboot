@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.github.maiconhellmann.demo.config.misc
 
 import org.springframework.security.crypto.password.MessageDigestPasswordEncoder

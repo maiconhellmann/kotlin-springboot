@@ -19,51 +19,63 @@ import java.util.*
 class AuthorizationServerConfig : AuthorizationServerConfigurerAdapter() {
 
     @Value("\${security.jwt.client-id}")
-    private val clientId: String? = null
+    lateinit var clientId: String
 
     @Value("\${security.jwt.client-secret}")
-    private val clientSecret: String? = null
+    lateinit var clientSecret: String
 
     @Value("\${security.jwt.grant-type}")
     lateinit var grantType: String
 
     @Value("\${security.jwt.scope-read}")
-    private val scopeRead: String? = null
+    lateinit var scopeRead: String
 
     @Value("\${security.jwt.scope-write}")
     private val scopeWrite = "write"
 
     @Value("\${security.jwt.resource-ids}")
-    private val resourceIds: String? = null
+    lateinit var resourceIds: String
+
+    @Value("\${token_validity_seconds}")
+    var tokenValiditySeconds: Int = 2592000
+
+    @Value("\${refresh_token_validity_seconds}")
+    var refreshTokenValiditySeconds: Int = 3600
+
+    @Value("\${server.servlet.path}")
+    lateinit var servletPath: String
 
     @Autowired
-    private val tokenStore: TokenStore? = null
+    lateinit var tokenStore: TokenStore
 
     @Autowired
-    private val accessTokenConverter: JwtAccessTokenConverter? = null
+    lateinit var accessTokenConverter: JwtAccessTokenConverter
 
     @Autowired
-    private val authenticationManager: AuthenticationManager? = null
+    lateinit var authenticationManager: AuthenticationManager
 
     @Throws(Exception::class)
-    override fun configure(configurer: ClientDetailsServiceConfigurer?) {
-        configurer!!
+    override fun configure(configurer: ClientDetailsServiceConfigurer) {
+        configurer
                 .inMemory()
                 .withClient(clientId)
                 .secret(clientSecret)
                 .authorizedGrantTypes(*grantType.split(",").toTypedArray())
                 .scopes(scopeRead, scopeWrite)
-                .resourceIds(resourceIds!!)
+                .resourceIds(resourceIds)
+                .accessTokenValiditySeconds(tokenValiditySeconds)
+                .refreshTokenValiditySeconds(refreshTokenValiditySeconds)
     }
 
     @Throws(Exception::class)
-    override fun configure(endpoints: AuthorizationServerEndpointsConfigurer?) {
+    override fun configure(endpoints: AuthorizationServerEndpointsConfigurer) {
         val enhancerChain = TokenEnhancerChain()
-        enhancerChain.setTokenEnhancers(Arrays.asList<TokenEnhancer>(accessTokenConverter!!))
-        endpoints!!.tokenStore(tokenStore)
+        enhancerChain.setTokenEnhancers(Arrays.asList<TokenEnhancer>(accessTokenConverter))
+        endpoints.tokenStore(tokenStore)
                 .accessTokenConverter(accessTokenConverter)
                 .tokenEnhancer(enhancerChain)
                 .authenticationManager(authenticationManager)
+                .prefix(servletPath)
     }
 
 }
