@@ -1,5 +1,6 @@
 package com.github.maiconhellmann.demo.config.swagger
 
+import com.google.common.base.Predicates
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import springfox.documentation.builders.PathSelectors
@@ -19,7 +20,11 @@ class SwaggerConfig {
                 .select()
                 .apis(RequestHandlerSelectors.any())
 //                .paths(PathSelectors.any())
-                .paths(PathSelectors.ant("/article"))
+//                .paths(PathSelectors.ant("/article"))
+                .paths(Predicates.or(
+                        PathSelectors.ant("/oauth/token/**"),
+                        PathSelectors.ant("/article/**")
+                ))
                 .build()
     }
 }
