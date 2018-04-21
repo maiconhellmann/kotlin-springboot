@@ -25,11 +25,13 @@ class ResourceServerConfig : ResourceServerConfigurerAdapter() {
 
     @Throws(Exception::class)
     override fun configure(http: HttpSecurity) {
-        http
-                .requestMatchers()
+
+        http.requestMatchers()
                 .and()
                 .authorizeRequests()
                 .anyRequest()
                 .authenticated()
+
     }
+
 }

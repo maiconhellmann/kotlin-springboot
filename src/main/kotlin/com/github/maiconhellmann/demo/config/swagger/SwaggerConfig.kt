@@ -3,6 +3,7 @@ package com.github.maiconhellmann.demo.config.swagger
 import com.google.common.base.Predicates
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import springfox.documentation.PathProvider
 import springfox.documentation.builders.PathSelectors
 import springfox.documentation.builders.RequestHandlerSelectors
 import springfox.documentation.spi.DocumentationType
@@ -27,5 +28,19 @@ class SwaggerConfig {
                         PathSelectors.ant("/user/**")
                 ))
                 .build()
+//                .pathProvider(object : PathProvider {
+//                    override fun getOperationPath(operationPath: String?): String {
+//                        return ""
+//                    }
+//
+//                    override fun getResourceListingPath(groupName: String?, apiDeclaration: String?): String {
+//                        return ""
+//                    }
+//
+//                    override fun getApplicationBasePath(): String {
+//                        return "/app"
+//                    }
+//
+//                })
     }
 }
