@@ -3,6 +3,7 @@ package com.github.maiconhellmann.demo.config
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Configuration
+import org.springframework.http.HttpMethod
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter
@@ -72,6 +73,7 @@ class AuthorizationServerConfig : AuthorizationServerConfigurerAdapter() {
         val enhancerChain = TokenEnhancerChain()
         enhancerChain.setTokenEnhancers(Arrays.asList<TokenEnhancer>(accessTokenConverter))
         endpoints.tokenStore(tokenStore)
+                .allowedTokenEndpointRequestMethods(HttpMethod.GET, HttpMethod.POST)
                 .accessTokenConverter(accessTokenConverter)
                 .tokenEnhancer(enhancerChain)
                 .authenticationManager(authenticationManager)

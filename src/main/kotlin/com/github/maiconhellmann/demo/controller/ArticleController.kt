@@ -2,6 +2,7 @@ package com.github.maiconhellmann.demo.controller
 
 import com.github.maiconhellmann.demo.model.Article
 import com.github.maiconhellmann.demo.repository.ArticleRepository
+import io.swagger.annotations.Api
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -10,6 +11,7 @@ import javax.validation.Valid
 
 @RestController
 @RequestMapping("/article")
+@Api(value="Article API", description="It controlls articles")
 class ArticleController(private val articleRepository: ArticleRepository) {
 
     @GetMapping
