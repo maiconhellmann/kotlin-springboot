@@ -1,5 +1,6 @@
 package com.github.maiconhellmann.demo.model
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import javax.persistence.*
 
 
@@ -13,5 +14,6 @@ class Role {
     var name: String? = null
 
     @get:ManyToMany(mappedBy = "roles")
+    @JsonIgnore
     var users: Set<User>? = null
 }
