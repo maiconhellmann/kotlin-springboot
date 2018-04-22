@@ -13,16 +13,16 @@ import java.util.*
 @Component
 class AppUserDetailsService : UserDetailsService {
     @Autowired
-    private val userRepository: UserRepository? = null
+    lateinit var userRepository: UserRepository
 
     @Throws(UsernameNotFoundException::class)
     override fun loadUserByUsername(s: String): UserDetails {
-        val (_, username, password, roles) = userRepository!!.findByUsername(s)
+        val user = userRepository.findByUsername(s)
                 ?: throw UsernameNotFoundException(String.format("The username %s doesn't exist", s))
 
         val authorities = ArrayList<GrantedAuthority>()
-        roles.forEach { role -> authorities.add(SimpleGrantedAuthority(role.name)) }
+        user.roles.forEach { role -> authorities.add(SimpleGrantedAuthority(role.name)) }
 
-        return org.springframework.security.core.userdetails.User(username, password, authorities)
+        return org.springframework.security.core.userdetails.User(user.username, user.password, authorities)
     }
 }

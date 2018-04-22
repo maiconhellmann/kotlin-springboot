@@ -28,9 +28,6 @@ class SecurityConfig : WebSecurityConfigurerAdapter() {
     @Value("\${security.signing-key}")
     private val signingKey: String? = null
 
-    @Value("\${security.encoding-strength}")
-    private val encodingStrength: Int? = null
-
     @Value("\${security.security-realm}")
     private val securityRealm: String? = null
 
@@ -51,7 +48,7 @@ class SecurityConfig : WebSecurityConfigurerAdapter() {
     @Throws(Exception::class)
     override fun configure(auth: AuthenticationManagerBuilder?) {
         auth!!.userDetailsService<AppUserDetailsService>(userDetailsService)
-                .passwordEncoder(ShaPasswordEncoder(encodingStrength!!))
+                .passwordEncoder(ShaPasswordEncoder())
     }
 
     @Throws(Exception::class)
@@ -65,6 +62,7 @@ class SecurityConfig : WebSecurityConfigurerAdapter() {
                 .and()
                 .csrf()
                 .disable()
+
     }
 
     override fun configure(web: WebSecurity) {

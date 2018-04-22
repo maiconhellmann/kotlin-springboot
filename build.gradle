@@ -55,4 +55,8 @@ dependencies {
 	runtime('mysql:mysql-connector-java')
 	testCompile('org.springframework.boot:spring-boot-starter-test')
 
+//    Spring Social
+    compile "org.springframework.social:spring-social-web:1.1.4.RELEASE"
+    compile "org.springframework.social:spring-social-facebook:2.0.3.RELEASE"
+	compile 'org.springframework.social:spring-social-facebook:2.0.3.RELEASE'
 }
