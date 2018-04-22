@@ -58,5 +58,5 @@ dependencies {
 //    Spring Social
     compile "org.springframework.social:spring-social-web:1.1.4.RELEASE"
     compile "org.springframework.social:spring-social-facebook:2.0.3.RELEASE"
-	compile 'org.springframework.social:spring-social-facebook:2.0.3.RELEASE'
+	compile 'org.springframework.social:spring-social-twitter:1.1.2.RELEASE'
 }

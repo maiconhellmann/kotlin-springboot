@@ -15,6 +15,7 @@ import org.springframework.social.connect.UsersConnectionRepository
 import org.springframework.social.connect.jdbc.JdbcUsersConnectionRepository
 import org.springframework.social.connect.web.ConnectController
 import org.springframework.social.facebook.connect.FacebookConnectionFactory
+import org.springframework.social.twitter.connect.TwitterConnectionFactory
 import javax.sql.DataSource
 
 
@@ -42,6 +43,11 @@ class SocialConfig : SocialConfigurer {
         cfConfig.addConnectionFactory(FacebookConnectionFactory(
                 env.getProperty("facebook.clientId"),
                 env.getProperty("facebook.clientSecret")))
+
+        cfConfig.addConnectionFactory(TwitterConnectionFactory(
+                env.getProperty("spring.social.twitter.appId"),
+                env.getProperty("spring.social.twitter.appSecret")
+        ))
     }
 
     @Bean
