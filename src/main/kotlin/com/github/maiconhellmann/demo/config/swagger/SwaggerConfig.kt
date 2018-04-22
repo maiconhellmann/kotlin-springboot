@@ -26,16 +26,19 @@ import java.util.*
 class SwaggerConfig {
 
     @Value("\${security.jwt.client-id}")
-    private val clientId: String? = null
+    lateinit var clientId: String
 
     @Value("\${security.jwt.client-secret}")
-    private val clientSecret: String = "whysp09"
+    lateinit var clientSecret: String
 
     @Value("\${swagger.ui.oauth2.token.url}")
-    private val authLink: String? = "http://localhost:8080/app/api/oauth/token"
+    lateinit var authLink: String
 
     @Value("\${swagger.controller.package}")
-    private val controllerPackage: String? = null
+    lateinit var controllerPackage: String
+
+    @Value("\${server.servlet.path}")
+    lateinit var baseApiPath: String
 
     @Bean
     fun api(): Docket {
@@ -45,7 +48,7 @@ class SwaggerConfig {
                 .apis(RequestHandlerSelectors.basePackage(controllerPackage))
                 .paths(PathSelectors.any())
                 .build().securitySchemes(Collections.singletonList(securitySchema()))
-                .securityContexts(Collections.singletonList(securityContext())).pathMapping("/api")
+                .securityContexts(Collections.singletonList(securityContext())).pathMapping(baseApiPath)
                 .useDefaultResponseMessages(false).apiInfo(apiInfo()).globalResponseMessage(RequestMethod.GET, defaultResponses())
                 .globalResponseMessage(RequestMethod.POST, defaultResponses())
 
