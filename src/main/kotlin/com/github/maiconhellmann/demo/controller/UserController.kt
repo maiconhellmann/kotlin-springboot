@@ -39,44 +39,42 @@ class UserController {
 
 
     @GetMapping("/facebook/login")
-    fun loginFacebook(@RequestParam("token") accessToken: String): com.github.maiconhellmann.demo.model.User {
+    fun loginFacebook(@RequestParam("token") accessToken: String): ResponseEntity<com.github.maiconhellmann.demo.model.User> {
         val facebook = FacebookTemplate(accessToken)
 
-        val fields = arrayOf("id", "email", "first_name", "last_name", "hometown", "birthday", "address", "about", "cover")
+        if (facebook.isAuthorized) {
+            val fields = arrayOf("id", "email", "first_name", "last_name", "hometown", "birthday", "address", "about", "cover")
 
-        val userProfile = facebook.fetchObject("me", User::class.java, *fields)
+            val userProfile = facebook.fetchObject("me", User::class.java, *fields)
+            val email = userProfile.email
 
-        //Image
-        facebook.userOperations().userProfileImage
+            if (email.isNotEmpty()) {
+                val password = UUID.randomUUID().toString()
+                val roles = roleRepository.findAll().toSet().toMutableList()
 
-        //User info
-        userProfile.id
-        userProfile.lastName
-        userProfile.firstName
-        userProfile.email
-        userProfile.birthday
+                var user = userRepository.findByUsername(email)
 
+                user = if (user != null) {
+                    user.copy(password = ShaPasswordEncoder().encode(password),
+                            socialPassword = password,
+                            roles = roles)
+                } else {
+                    com.github.maiconhellmann.demo.model.User(
+                            username = email,
+                            password = ShaPasswordEncoder().encode(password),
+                            roles = roles
+                    )
+                }
 
-        val password = UUID.randomUUID().toString()
-        val roles = roleRepository.findAll().toSet().toMutableList()
+                user = userRepository.save(user)
 
-        var user = userRepository.findByUsername(userProfile.email)
-
-        user = if (user != null) {
-            user.copy(password = ShaPasswordEncoder().encode(password),
-                    socialPassword = password,
-                    roles = roles)
+                return ResponseEntity.ok().body(user.copy(socialPassword = password))
+            } else {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
+            }
         } else {
-            com.github.maiconhellmann.demo.model.User(
-                    username = userProfile.email,
-                    password = ShaPasswordEncoder().encode(password),
-                    roles = roles
-            )
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()
         }
-
-        user = userRepository.save(user)
-
-        return user.copy(socialPassword = password)
     }
 
     @GetMapping("/twitter/login")
@@ -85,36 +83,40 @@ class UserController {
 
         val twitterTemplate = TwitterTemplate(twitterId, twitterSecret, consumerKey, consumerSecret)
 
-        val restTemplate = twitterTemplate.restTemplate
-        val twitterProfile = restTemplate.getForObject("https://api.twitter.com/1.1/account/verify_credentials.json?include_email=true", TwitterProfile::class.java)
+        if (twitterTemplate.isAuthorized) {
+            val restTemplate = twitterTemplate.restTemplate
+            val twitterProfile = restTemplate.getForObject("https://api.twitter.com/1.1/account/verify_credentials.json?include_email=true", TwitterProfile::class.java)
 
-        if (twitterProfile?.extraData?.containsKey("email") == true
-                && twitterProfile.extraData?.get("email")?.toString()?.isNotEmpty() == true) {
+            if (twitterProfile?.extraData?.containsKey("email") == true
+                    && twitterProfile.extraData?.get("email")?.toString()?.isNotEmpty() == true) {
 
-            val email = twitterProfile.extraData?.get("email").toString()
+                val email = twitterProfile.extraData?.get("email").toString()
 
-            val password = UUID.randomUUID().toString()
-            val roles = roleRepository.findAll().toSet().toMutableList()
+                val password = UUID.randomUUID().toString()
+                val roles = roleRepository.findAll().toSet().toMutableList()
 
-            var user = userRepository.findByUsername(email)
+                var user = userRepository.findByUsername(email)
 
-            user = if (user != null) {
-                user.copy(password = ShaPasswordEncoder().encode(password),
-                        socialPassword = password,
-                        roles = roles)
+                user = if (user != null) {
+                    user.copy(password = ShaPasswordEncoder().encode(password),
+                            socialPassword = password,
+                            roles = roles)
+                } else {
+                    com.github.maiconhellmann.demo.model.User(
+                            username = email,
+                            password = ShaPasswordEncoder().encode(password),
+                            roles = roles
+                    )
+                }
+
+                user = userRepository.save(user)
+
+                return ResponseEntity.ok().body(user.copy(socialPassword = password))
             } else {
-                com.github.maiconhellmann.demo.model.User(
-                        username = email,
-                        password = ShaPasswordEncoder().encode(password),
-                        roles = roles
-                )
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
             }
-
-            user = userRepository.save(user)
-
-            return ResponseEntity.ok().body(user.copy(socialPassword = password))
         } else {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()
         }
     }
 }
