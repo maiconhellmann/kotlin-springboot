@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.oauth2.provider.endpoint.TokenEndpoint
 import org.springframework.social.facebook.api.User
 import org.springframework.social.facebook.api.impl.FacebookTemplate
 import org.springframework.social.twitter.api.TwitterProfile
@@ -37,8 +38,10 @@ class UserController {
     @Value("\${spring.social.twitter.appSecret}")
     lateinit var twitterSecret: String
 
+    @Autowired
+    lateinit var tokenEndpoint: TokenEndpoint
 
-    @GetMapping("/facebook/login")
+    @GetMapping("/signin/facebook")
     fun loginFacebook(@RequestParam("token") accessToken: String): ResponseEntity<com.github.maiconhellmann.demo.model.User> {
         val facebook = FacebookTemplate(accessToken)
 
@@ -56,7 +59,7 @@ class UserController {
 
                 user = if (user != null) {
                     user.copy(password = ShaPasswordEncoder().encode(password),
-                            socialPassword = password,
+                            socialTokenSecret = password,
                             roles = roles)
                 } else {
                     com.github.maiconhellmann.demo.model.User(
@@ -68,7 +71,7 @@ class UserController {
 
                 user = userRepository.save(user)
 
-                return ResponseEntity.ok().body(user.copy(socialPassword = password))
+                return ResponseEntity.ok().body(user.copy(socialTokenSecret = password))
             } else {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
             }
@@ -77,7 +80,7 @@ class UserController {
         }
     }
 
-    @GetMapping("/twitter/login")
+    @GetMapping("/signin/twitter")
     fun loginTwitter(@RequestParam("consumerKey") consumerKey: String,
                      @RequestParam("consumerSecret") consumerSecret: String): ResponseEntity<com.github.maiconhellmann.demo.model.User> {
 
@@ -99,7 +102,7 @@ class UserController {
 
                 user = if (user != null) {
                     user.copy(password = ShaPasswordEncoder().encode(password),
-                            socialPassword = password,
+                            socialTokenSecret = password,
                             roles = roles)
                 } else {
                     com.github.maiconhellmann.demo.model.User(
@@ -111,7 +114,7 @@ class UserController {
 
                 user = userRepository.save(user)
 
-                return ResponseEntity.ok().body(user.copy(socialPassword = password))
+                return ResponseEntity.ok(user.copy(socialTokenSecret = password))
             } else {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
             }

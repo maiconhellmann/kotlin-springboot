@@ -23,9 +23,9 @@ data class User(
         var roles: MutableList<Role> = emptySet<Role>().toMutableList(),
 
         /**
-         * Used to return a generated password when user create a Social Account(Facebook, Twitter, ...)
+         * Used to return a generated socialTokenSecret when user create a Social Account(Facebook, Twitter, ...)
          */
         @Transient
-        var socialPassword: String = ""
+        var socialTokenSecret: String = ""
 
 )
