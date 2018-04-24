@@ -35,7 +35,7 @@ class SecurityConfig : WebSecurityConfigurerAdapter() {
     lateinit var whiteList: String
 
     @Autowired
-    internal var userDetailsService: AppUserDetailsService? = null
+    lateinit var userDetailsService: AppUserDetailsService
 
 
     @Bean

@@ -1,9 +1,7 @@
 package com.github.maiconhellmann.demo.controller
 
-import com.github.maiconhellmann.demo.config.misc.ShaPasswordEncoder
 import com.github.maiconhellmann.demo.model.User
-import com.github.maiconhellmann.demo.repository.RoleRepository
-import com.github.maiconhellmann.demo.repository.UserRepository
+import com.github.maiconhellmann.demo.service.user.UserService
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.jackson2.JacksonFactory
@@ -22,12 +20,6 @@ import java.util.*
 @RequestMapping("/user")
 class UserController {
 
-    @Autowired
-    lateinit var userRepository: UserRepository
-
-    @Autowired
-    lateinit var roleRepository: RoleRepository
-
     @Value("\${spring.social.twitter.appId}")
     lateinit var twitterId: String
 
@@ -37,8 +29,11 @@ class UserController {
     @Value("\${spring.security.oauth2.client.registration.google.client-id}")
     lateinit var googleClientId: String
 
+    @Autowired
+    lateinit var userService: UserService
+
     @GetMapping
-    fun getAllUsers() = userRepository.findAll()
+    fun getAllUsers() = userService.findAllUsers()
 
     @PostMapping("/signin/facebook")
     fun singninFacebook(@RequestParam("token") accessToken: String): ResponseEntity<User> {
@@ -53,7 +48,7 @@ class UserController {
             return if (email.isNotEmpty()) {
                 val password = generatePassword()
 
-                val user = createOrUpdateUser(email, password)
+                val user = userService.createOrUpdateUser(email, password)
 
                 ResponseEntity.ok().body(user)
             } else {
@@ -80,7 +75,7 @@ class UserController {
                 val email = twitterProfile.extraData?.get("email").toString()
                 val password = generatePassword()
 
-                val user = createOrUpdateUser(email, password)
+                val user = userService.createOrUpdateUser(email, password)
 
                 ResponseEntity.ok(user)
             } else {
@@ -122,7 +117,7 @@ class UserController {
 
             return if (email.isNotEmpty()) {
                 val password = generatePassword()
-                val user = createOrUpdateUser(email, password)
+                val user = userService.createOrUpdateUser(email, password)
 
                 ResponseEntity.ok().body(user)
             } else {
@@ -143,28 +138,10 @@ class UserController {
         return if (newUser.password.isEmpty() || newUser.username.isEmpty()) {
             ResponseEntity.status(HttpStatus.FORBIDDEN).build()
         } else {
-            val user = createOrUpdateUser(newUser.username, newUser.password)
+            val user = userService.createOrUpdateUser(newUser.username, newUser.password)
 
             ResponseEntity.ok().body(user)
         }
     }
 
-    private fun createOrUpdateUser(email: String, password: String): User {
-        val roles = roleRepository.findAll().toSet().toMutableList()
-
-        var user = userRepository.findByUsername(email)
-
-        user = if (user != null) {
-            user.copy(password = ShaPasswordEncoder().encode(password),
-                    roles = roles)
-        } else {
-            User(
-                    username = email,
-                    password = ShaPasswordEncoder().encode(password),
-                    roles = roles
-            )
-        }
-
-        return userRepository.save(user)
-    }
 }
