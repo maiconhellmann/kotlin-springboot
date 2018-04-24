@@ -41,6 +41,7 @@ class ResourceServerConfig : ResourceServerConfigurerAdapter() {
                 .antMatchers("/api/user/signin/facebook").permitAll()
                 .antMatchers("/api/user/signin/google").permitAll()
                 .antMatchers("/api/user/signin/twitter").permitAll()
+                .antMatchers("/api/user/signin/email").permitAll()
                 .anyRequest().authenticated().and().httpBasic()
 
     }

@@ -1,6 +1,7 @@
 package com.github.maiconhellmann.demo.controller
 
 import com.github.maiconhellmann.demo.config.misc.ShaPasswordEncoder
+import com.github.maiconhellmann.demo.model.User
 import com.github.maiconhellmann.demo.repository.RoleRepository
 import com.github.maiconhellmann.demo.repository.UserRepository
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier
@@ -10,14 +11,10 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.social.facebook.api.User
 import org.springframework.social.facebook.api.impl.FacebookTemplate
 import org.springframework.social.twitter.api.TwitterProfile
 import org.springframework.social.twitter.api.impl.TwitterTemplate
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import java.util.*
 
 
@@ -31,9 +28,6 @@ class UserController {
     @Autowired
     lateinit var roleRepository: RoleRepository
 
-    @GetMapping
-    fun getAllUsers() = userRepository.findAll()
-
     @Value("\${spring.social.twitter.appId}")
     lateinit var twitterId: String
 
@@ -43,22 +37,25 @@ class UserController {
     @Value("\${spring.security.oauth2.client.registration.google.client-id}")
     lateinit var googleClientId: String
 
-    @GetMapping("/signin/facebook")
-    fun loginFacebook(@RequestParam("token") accessToken: String): ResponseEntity<com.github.maiconhellmann.demo.model.User> {
+    @GetMapping
+    fun getAllUsers() = userRepository.findAll()
+
+    @PostMapping("/signin/facebook")
+    fun singninFacebook(@RequestParam("token") accessToken: String): ResponseEntity<User> {
         val facebook = FacebookTemplate(accessToken)
 
         if (facebook.isAuthorized) {
             val fields = arrayOf("id", "email", "first_name", "last_name", "hometown", "birthday", "address", "about", "cover")
 
-            val userProfile = facebook.fetchObject("me", User::class.java, *fields)
+            val userProfile = facebook.fetchObject("me", org.springframework.social.facebook.api.User::class.java, *fields)
             val email = userProfile.email
 
             return if (email.isNotEmpty()) {
-                val password = UUID.randomUUID().toString()
+                val password = generatePassword()
 
                 val user = createOrUpdateUser(email, password)
 
-                ResponseEntity.ok().body(user.copy(socialTokenSecret = password))
+                ResponseEntity.ok().body(user)
             } else {
                 ResponseEntity.status(HttpStatus.FORBIDDEN).build()
             }
@@ -67,9 +64,9 @@ class UserController {
         }
     }
 
-    @GetMapping("/signin/twitter")
-    fun loginTwitter(@RequestParam("consumerKey") consumerKey: String,
-                     @RequestParam("consumerSecret") consumerSecret: String): ResponseEntity<com.github.maiconhellmann.demo.model.User> {
+    @PostMapping("/signin/twitter")
+    fun signinTwitter(@RequestParam("consumerKey") consumerKey: String,
+                      @RequestParam("consumerSecret") consumerSecret: String): ResponseEntity<User> {
 
         val twitterTemplate = TwitterTemplate(twitterId, twitterSecret, consumerKey, consumerSecret)
 
@@ -81,11 +78,11 @@ class UserController {
                     && twitterProfile.extraData?.get("email")?.toString()?.isNotEmpty() == true) {
 
                 val email = twitterProfile.extraData?.get("email").toString()
-                val password = UUID.randomUUID().toString()
+                val password = generatePassword()
 
                 val user = createOrUpdateUser(email, password)
 
-                ResponseEntity.ok(user.copy(socialTokenSecret = password))
+                ResponseEntity.ok(user)
             } else {
                 ResponseEntity.status(HttpStatus.FORBIDDEN).build()
             }
@@ -94,28 +91,8 @@ class UserController {
         }
     }
 
-    private fun createOrUpdateUser(email: String, password: String): com.github.maiconhellmann.demo.model.User {
-        val roles = roleRepository.findAll().toSet().toMutableList()
-
-        var user = userRepository.findByUsername(email)
-
-        user = if (user != null) {
-            user.copy(password = ShaPasswordEncoder().encode(password),
-                    socialTokenSecret = password,
-                    roles = roles)
-        } else {
-            com.github.maiconhellmann.demo.model.User(
-                    username = email,
-                    password = ShaPasswordEncoder().encode(password),
-                    roles = roles
-            )
-        }
-
-        return userRepository.save(user)
-    }
-
-    @GetMapping("/signin/google")
-    fun loginGoogle(@RequestParam("token") idTokenString: String): ResponseEntity<com.github.maiconhellmann.demo.model.User> {
+    @PostMapping("/signin/google")
+    fun signinGoogle(@RequestParam("token") idTokenString: String): ResponseEntity<User> {
 
         val verifier = GoogleIdTokenVerifier.Builder(NetHttpTransport(), JacksonFactory.getDefaultInstance())
                 // Specify the CLIENT_ID of the app that accesses the backend:
@@ -132,7 +109,7 @@ class UserController {
             val payload = idToken.payload
 
             // Print user identifier
-            val userId = payload.subject
+//            val userId = payload.subject
 
             // Get profile information from payload
             val email = payload.email
@@ -144,16 +121,50 @@ class UserController {
 //            val givenName = payload["given_name"] as String
 
             return if (email.isNotEmpty()) {
-                val password = UUID.randomUUID().toString()
+                val password = generatePassword()
                 val user = createOrUpdateUser(email, password)
 
-                ResponseEntity.ok().body(user.copy(socialTokenSecret = password))
+                ResponseEntity.ok().body(user)
             } else {
                 ResponseEntity.status(HttpStatus.FORBIDDEN).build()
             }
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()
         }
+    }
 
+    private fun generatePassword(): String {
+        return UUID.randomUUID().toString()
+    }
+
+    @PostMapping("/signin/email")
+    fun signinEmail(@RequestBody newUser: User): ResponseEntity<User> {
+
+        return if (newUser.password.isEmpty() || newUser.username.isEmpty()) {
+            ResponseEntity.status(HttpStatus.FORBIDDEN).build()
+        } else {
+            val user = createOrUpdateUser(newUser.username, newUser.password)
+
+            ResponseEntity.ok().body(user)
+        }
+    }
+
+    private fun createOrUpdateUser(email: String, password: String): User {
+        val roles = roleRepository.findAll().toSet().toMutableList()
+
+        var user = userRepository.findByUsername(email)
+
+        user = if (user != null) {
+            user.copy(password = ShaPasswordEncoder().encode(password),
+                    roles = roles)
+        } else {
+            User(
+                    username = email,
+                    password = ShaPasswordEncoder().encode(password),
+                    roles = roles
+            )
+        }
+
+        return userRepository.save(user)
     }
 }
