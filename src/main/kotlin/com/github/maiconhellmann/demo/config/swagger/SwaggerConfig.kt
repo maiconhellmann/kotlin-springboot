@@ -37,8 +37,8 @@ class SwaggerConfig {
     @Value("\${swagger.controller.package}")
     lateinit var controllerPackage: String
 
-    @Value("\${server.servlet.path}")
-    lateinit var baseApiPath: String
+//    @Value("\${server.servlet.path}")
+//    lateinit var baseApiPath: String
 
     @Bean
     fun api(): Docket {
@@ -48,7 +48,7 @@ class SwaggerConfig {
                 .apis(RequestHandlerSelectors.basePackage(controllerPackage))
                 .paths(PathSelectors.any())
                 .build().securitySchemes(Collections.singletonList(securitySchema()))
-                .securityContexts(Collections.singletonList(securityContext())).pathMapping(baseApiPath)
+//                .securityContexts(Collections.singletonList(securityContext())).pathMapping(baseApiPath)
                 .useDefaultResponseMessages(false).apiInfo(apiInfo()).globalResponseMessage(RequestMethod.GET, defaultResponses())
                 .globalResponseMessage(RequestMethod.POST, defaultResponses())
 
