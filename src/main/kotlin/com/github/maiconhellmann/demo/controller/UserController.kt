@@ -1,6 +1,7 @@
 package com.github.maiconhellmann.demo.controller
 
 import com.github.maiconhellmann.demo.model.User
+import com.github.maiconhellmann.demo.service.CustomLinkedinTemplate
 import com.github.maiconhellmann.demo.service.user.UserService
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier
 import com.google.api.client.http.javanet.NetHttpTransport
@@ -46,11 +47,11 @@ class UserController {
             val email = userProfile.email
 
             return if (email.isNotEmpty()) {
-                val password = generatePassword()
+                val password = userService.generatePassword()
 
                 val user = userService.createOrUpdateUser(email, password)
 
-                ResponseEntity.ok().body(user)
+                ResponseEntity.ok(user.copy(password = password))
             } else {
                 ResponseEntity.status(HttpStatus.FORBIDDEN).build()
             }
@@ -73,11 +74,11 @@ class UserController {
                     && twitterProfile.extraData?.get("email")?.toString()?.isNotEmpty() == true) {
 
                 val email = twitterProfile.extraData?.get("email").toString()
-                val password = generatePassword()
+                val password = userService.generatePassword()
 
                 val user = userService.createOrUpdateUser(email, password)
 
-                ResponseEntity.ok(user)
+                ResponseEntity.ok(user.copy(password = password))
             } else {
                 ResponseEntity.status(HttpStatus.FORBIDDEN).build()
             }
@@ -116,10 +117,10 @@ class UserController {
 //            val givenName = payload["given_name"] as String
 
             return if (email.isNotEmpty()) {
-                val password = generatePassword()
+                val password = userService.generatePassword()
                 val user = userService.createOrUpdateUser(email, password)
 
-                ResponseEntity.ok().body(user)
+                ResponseEntity.ok(user.copy(password = password))
             } else {
                 ResponseEntity.status(HttpStatus.FORBIDDEN).build()
             }
@@ -128,9 +129,6 @@ class UserController {
         }
     }
 
-    private fun generatePassword(): String {
-        return UUID.randomUUID().toString()
-    }
 
     @PostMapping("/signin/email")
     fun signinEmail(@RequestBody newUser: User): ResponseEntity<User> {
@@ -141,6 +139,28 @@ class UserController {
             val user = userService.createOrUpdateUser(newUser.username, newUser.password)
 
             ResponseEntity.ok().body(user)
+        }
+    }
+
+    @PostMapping("/signin/linkedin")
+    fun signinLinkedin(@RequestParam("token") accessToken: String): ResponseEntity<User> {
+        val linkedin = CustomLinkedinTemplate(accessToken)
+
+        if (linkedin.isAuthorized) {
+
+            return if (linkedin.profileOperations().userProfile.emailAddress.isNotEmpty()) {
+
+                val email = linkedin.profileOperations().userProfile.emailAddress
+                val password = userService.generatePassword()
+
+                val user = userService.createOrUpdateUser(email, password)
+
+                ResponseEntity.ok(user.copy(password = password))
+            } else {
+                ResponseEntity.status(HttpStatus.FORBIDDEN).build()
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()
         }
     }
 

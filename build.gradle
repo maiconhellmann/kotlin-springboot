@@ -59,5 +59,6 @@ dependencies {
     compile "org.springframework.social:spring-social-web:1.1.4.RELEASE"
     compile "org.springframework.social:spring-social-facebook:2.0.3.RELEASE"
 	compile 'org.springframework.social:spring-social-twitter:1.1.2.RELEASE'
+	compile 'org.springframework.social:spring-social-linkedin:1.0.2.RELEASE'
     compile 'com.google.api-client:google-api-client:1.23.0'
 }

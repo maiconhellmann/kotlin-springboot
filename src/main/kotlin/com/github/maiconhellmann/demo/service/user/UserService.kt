@@ -6,6 +6,7 @@ import com.github.maiconhellmann.demo.repository.RoleRepository
 import com.github.maiconhellmann.demo.repository.UserRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import java.util.*
 
 @Component
 class UserService {
@@ -35,5 +36,8 @@ class UserService {
         }
 
         return userRepository.save(user)
+    }
+    fun generatePassword(): String {
+        return UUID.randomUUID().toString()
     }
 }
