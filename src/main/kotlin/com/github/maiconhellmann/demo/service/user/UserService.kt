@@ -17,7 +17,13 @@ class UserService {
     lateinit var roleRepository: RoleRepository
 
 
-    fun findAllUsers() = userRepository.findAll()
+    fun findAllUsers(): List<User> {
+        val users = userRepository.findAll()
+
+        users.forEach { it.password = "" }
+
+        return users
+    }
 
     fun createOrUpdateUser(email: String, password: String): User {
         val roles = roleRepository.findAll().toSet().toMutableList()
@@ -37,6 +43,7 @@ class UserService {
 
         return userRepository.save(user)
     }
+
     fun generatePassword(): String {
         return UUID.randomUUID().toString()
     }

@@ -6,6 +6,10 @@ import com.github.maiconhellmann.demo.service.user.UserService
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.jackson2.JacksonFactory
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiResponse
+import io.swagger.annotations.ApiResponses
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
@@ -18,6 +22,7 @@ import java.util.*
 
 
 @RestController
+@Api(value="User Controller", description="Operations pertaining to users in the system")
 @RequestMapping("/user")
 class UserController {
 
@@ -34,9 +39,14 @@ class UserController {
     lateinit var userService: UserService
 
     @GetMapping
+    @ApiOperation("List all users")
     fun getAllUsers() = userService.findAllUsers()
 
     @PostMapping("/signin/facebook")
+    @ApiOperation("Create an user with Facebook information")
+    @ApiResponses(value = [
+        ApiResponse(code = 403, message = "The system did not have access to all the necessary information. Probably the email is not confirmed or does not allow access."),
+        ApiResponse(code = 401, message = "Access was not authorized by the source")])
     fun singninFacebook(@RequestParam("token") accessToken: String): ResponseEntity<User> {
         val facebook = FacebookTemplate(accessToken)
 
@@ -61,6 +71,10 @@ class UserController {
     }
 
     @PostMapping("/signin/twitter")
+    @ApiOperation("Create an user with Twitter information")
+    @ApiResponses(value = [
+        ApiResponse(code = 403, message = "The system did not have access to all the necessary information. Probably the email is not confirmed or does not allow access."),
+        ApiResponse(code = 401, message = "Access was not authorized by the source")])
     fun signinTwitter(@RequestParam("consumerKey") consumerKey: String,
                       @RequestParam("consumerSecret") consumerSecret: String): ResponseEntity<User> {
 
@@ -88,6 +102,10 @@ class UserController {
     }
 
     @PostMapping("/signin/google")
+    @ApiOperation("Create an user with Google information")
+    @ApiResponses(value = [
+        ApiResponse(code = 403, message = "The system did not have access to all the necessary information. Probably the email is not confirmed or does not allow access."),
+        ApiResponse(code = 401, message = "Access was not authorized by the source")])
     fun signinGoogle(@RequestParam("token") idTokenString: String): ResponseEntity<User> {
 
         val verifier = GoogleIdTokenVerifier.Builder(NetHttpTransport(), JacksonFactory.getDefaultInstance())
@@ -130,7 +148,9 @@ class UserController {
     }
 
 
+    @ApiOperation("Create an user with provided information")
     @PostMapping("/signin/email")
+    @ApiResponses(value = [ApiResponse(code = 403, message = "When username or password is null")])
     fun signinEmail(@RequestBody newUser: User): ResponseEntity<User> {
 
         return if (newUser.password.isEmpty() || newUser.username.isEmpty()) {
@@ -138,11 +158,15 @@ class UserController {
         } else {
             val user = userService.createOrUpdateUser(newUser.username, newUser.password)
 
-            ResponseEntity.ok().body(user)
+            ResponseEntity.ok().body(user.copy(password = ""))
         }
     }
 
     @PostMapping("/signin/linkedin")
+    @ApiOperation("Create an user with linkedIn information")
+    @ApiResponses(value = [
+        ApiResponse(code = 403, message = "The system did not have access to all the necessary information. Probably the email is not confirmed or does not allow access."),
+        ApiResponse(code = 401, message = "Access was not authorized by the source")])
     fun signinLinkedin(@RequestParam("token") accessToken: String): ResponseEntity<User> {
         val linkedin = CustomLinkedinTemplate(accessToken)
 
